@@ -15,9 +15,9 @@ namespace RecipeDemo.Data
 			if (context.RecipeDetails.Any())
 				return;
 
-			//var recipe = new Recipe { Title = "Steak", Description = "Delicious burnt meats.", Image = "steak.png" };
-			//context.Recipes.Add(recipe);
-			//context.SaveChanges();
+			var recipe = new Recipe { Title = "Steak", Description = "Delicious burnt meats.", Image = "steak.jpg" };
+			context.Recipes.Add(recipe);
+			context.SaveChanges();
 
 			//var ingredients = new Ingredient[]
 			//{
@@ -43,7 +43,6 @@ namespace RecipeDemo.Data
 
 			//foreach (var instruction in instructions)
 			//	context.Instructions.Add(instruction);
-			var recipe = new Recipe { Id = 1 };
 			var details = new RecipeDetail[]
 			{
 				new RecipeDetail { Description = "A steak", RecipeId = recipe.Id, DetailType = 1 },
