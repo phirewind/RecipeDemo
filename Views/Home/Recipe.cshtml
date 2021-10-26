@@ -1,0 +1,216 @@
+﻿@model RecipeDemo.ViewModels.RecipeViewModel
+@{
+	ViewData["Title"] = Model.Recipe.Title;
+}
+<div class="container">
+	<div class="row">
+		<div class="col-md-3"></div>
+		<div class="col-md-6 text-center">
+			<h1 id="lblTitle" class="mb-3 read-Title pointer" onclick="ToggleEdit('Title', true)">@Model.Recipe.Title</h1>
+			<input type="text" id="txtTitle" size="50" class="edit-Title hidden" onkeydown="KeyMonitor(event, 'Title');" onfocusout="Escape('Title')" value="@Model.Recipe.Title" />
+			<img src="~/images/@Model.Recipe.Image" class="full-img" onclick="ShowImageForm(true)" />
+			<div class="imgForm hidden">
+				<div class="d-sm-flex justify-content-center">
+					<form asp-action="UploadImage" enctype="multipart/form-data">
+						<input asp-for="Id" type="hidden" />
+						<input asp-for="ImageFile" accept="image/*" />
+						<input type="submit" value="Upload" class="btn-sm btn-primary btn-spacer" />
+					</form>
+					<button class="btn-sm btn-danger btn-spacer" onclick="ShowImageForm(false)">Cancel</button>
+				</div>
+			</div>
+			<br />
+			<br />
+			<p id="lblDescription" class="read-Description pointer" onclick="ToggleEdit('Description', true)">@Model.Recipe.Description</p>
+			<textarea id="txtDescription" rows="4" cols="50" maxlength="200" class="edit-Description hidden" onkeydown="KeyMonitor(event, 'Description')" onfocusout="Escape('Description')">@Model.Recipe.Description</textarea>
+			<h4 class="text-center mb-3">Ingredients:</h4>
+			<div class="text-left">
+				<ul id="lstIngredients">
+					@foreach (var detail in Model.Ingredients)
+					{
+						<li id="grpDetail_@detail.Id">
+							<div id="lblDetail_@detail.Id" class="read-Detail_@detail.Id pointer" onclick="ToggleEdit('Detail_@detail.Id', true)">@detail.Description</div>
+							<div class="d-sm-flex text-left">
+								<textarea type="text" rows="2" cols="50" id="txtDetail_@detail.Id" class="edit-Detail_@detail.Id hidden" onkeydown="KeyMonitor(event, 'Detail_@detail.Id');" onfocusout="Escape('Detail_@detail.Id')">@detail.Description</textarea>
+								<button type="button" class="btn-sm btn-danger edit-Detail_@detail.Id hidden" onmouseover="Hover(@detail.Id)" onmouseout="Hover('')" onclick="DeleteDetail(@detail.Id)">X</button>
+							</div>
+						</li>
+					}
+				</ul>
+			</div>
+			<button onclick="AddDetail(1)" class="btn-sm btn-primary btn-spacer x-edit">Add Ingredient</button>
+			<br /><br />
+			<h4 class="text-center mb-3">Instructions:</h4>
+			<div class="text-left">
+				<ul id="lstInstructions">
+					@foreach (var detail in Model.Instructions)
+					{
+						<li id="grpDetail_@detail.Id">
+							<div id="lblDetail_@detail.Id" class="read-Detail_@detail.Id pointer" onclick="ToggleEdit('Detail_@detail.Id', true)">@detail.Description</div>
+							<div class="d-sm-flex text-left">
+								<textarea type="text" rows="2" cols="50" id="txtDetail_@detail.Id" class="edit-Detail_@detail.Id hidden" onkeydown="KeyMonitor(event, 'Detail_@detail.Id');" onfocusout="Escape('Detail_@detail.Id')">@detail.Description</textarea>
+								<button type="button" class="btn-sm btn-danger edit-Detail_@detail.Id hidden" onmouseover="Hover(@detail.Id)" onmouseout="Hover('')" onclick="DeleteDetail(@detail.Id)">X</button>
+							</div>
+						</li>
+					}
+				</ul>
+			</div>
+			<button onclick="AddDetail(2)" class="btn-sm btn-primary btn-spacer x-edit">Add Instruction</button>
+		</div>
+		<div class="col-md-3"></div>
+	</div>
+</div>
+<div class="text-center">
+	<button onclick="DeleteRecipe()" class="btn-sm btn-danger btn-spacer">Delete Recipe</button>
+</div>
+
+<script>
+	var editMode = false;
+	var hoverDelete = "";
+
+	function Hover(id) {
+		hoverDelete = id;
+	}
+	function ShowImageForm(show) {
+		editMode = show;
+		if (show)
+			$(".imgForm").removeClass("hidden");
+		else
+			$(".imgForm").addClass("hidden");
+	}
+
+	function AddDetail(detailType) {
+		if (editMode)
+			return;
+
+		$.ajax({
+			url: "/Home/CreateDetail/@Model.Recipe.Id/"+detailType,
+			type: 'GET',
+			success: function (data) {
+				if (data) {  // check if data is defined
+					AddDetailBlock(data, detailType);
+				}
+			},
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				alert("Error: " + errorThrown);
+			}
+		});
+	}
+
+	function AddDetailBlock(id, detailType) {
+		var newBlock =
+			"<li id=\"grpDetail_" + id + "\">" +
+			"<div id=\"lblDetail_" + id + "\" class=\"read-Detail_" + id + " pointer\" onclick=\"ToggleEdit('Detail_" + id + "', true)\">Detail Description</div>" +
+			"<div class=\"d-sm-flex text-left\">" +
+			"<textarea type=\"text\" cols='50' rows='2' id=\"txtDetail_" + id + "\" class=\"edit-Detail_" + id + " hidden\" onkeydown=\"KeyMonitor(event, 'Detail_" + id + "');\" onfocusout=\"Escape('Detail_"+id+"')\">Detail Description</textarea>" +
+			"<button type=\"button\" class=\"btn-sm btn-danger edit-Detail_" + id + " hidden\" onmouseover=\"Hover("+id+")\" onmouseout=\"Hover('')\" onclick=\"DeleteDetail(" + id + ")\">X</button>" +
+			"</div>" +
+			"</li>";
+		$(detailType == 1 ? "#lstIngredients" : "#lstInstructions").append(newBlock);
+		ToggleEdit("Detail_" + id, true);
+	}
+
+	function ToggleEdit(className, editing) {
+		if (editing == editMode)
+			return;
+		$(editing ? ".read-"+className : ".edit-"+className).addClass("hidden");
+		$(editing ? ".edit-" + className : ".read-" + className).removeClass("hidden");
+		editMode = editing;
+		if (editMode)
+			$("#txt" + className).focus();
+	}
+
+	function KeyMonitor(e, field) {
+		var key = e.which;
+		if (key == 27)  // the escape
+		{
+			Escape(field);
+		}
+		if (key == 13)  // the enter key code
+		{
+			e.preventDefault();
+			ToggleEdit(field, false);
+			$("#lbl" + field).text($("#txt" + field).val());
+			SaveChanges(field);
+			return false;
+		}
+	}
+
+	function Escape(field) {
+		if (hoverDelete != "") {
+			DeleteDetail(hoverDelete);
+			return;
+		}
+		ToggleEdit(field, false);
+		$("#txt" + field).val($("#lbl" + field).text());
+		return false;
+	}
+
+	function SaveChanges(field) {
+		var id = @Model.Recipe.Id;
+		var updateTarget = field;
+		if (field.startsWith("Detail_")) {
+			updateTarget = "Detail";
+			id = field.replace("Detail_", "");
+		}
+		var url = "/Home/Update" + updateTarget + "/" + id + "/" + encodeURIComponent($("#txt" + field).val());
+		$.ajax({
+			url: url,
+			type: 'GET',
+			success: function (data) {
+				// do nothing if successful
+			},
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				window.location = "/Home/Recipe/@Model.Recipe.Id"; // any save error, attempt to reload the page
+			}
+		});
+	}
+
+	function DeleteRecipe() {
+		$.confirm({
+			title: 'Delete Recipe',
+			content: 'Are you sure you want to delete this recipe?',
+			buttons: {
+				confirm: function () {
+					$.ajax({
+						url: "/Home/DeleteRecipe/@Model.Recipe.Id",
+						type: 'GET',
+						success: function (data) {
+							window.location = "/";
+						},
+						error: function (XMLHttpRequest, textStatus, errorThrown) {
+							window.location = "/";
+						}
+					});
+				},
+				cancel: function () {
+				},
+			}
+		});
+	}
+
+	function DeleteDetail(id) {
+		$.confirm({
+			title: 'Delete Detail',
+			content: 'Are you sure you want to delete this detail?',
+			buttons: {
+				confirm: function () {
+					$.ajax({
+						url: "/Home/DeleteDetail/"+id,
+						type: 'GET',
+						success: function (data) {
+							$("#grpDetail_" + id).remove();
+							editMode = false;
+							return true;
+						},
+						error: function (XMLHttpRequest, textStatus, errorThrown) {
+							window.location = "/Home/Recipe/@Model.Recipe.Id"; // any save error, attempt to reload the page
+						}
+					});
+				},
+				cancel: function () {
+				},
+			}
+		});
+	}
+</script>

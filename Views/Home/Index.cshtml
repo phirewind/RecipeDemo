@@ -1,0 +1,72 @@
+﻿@{
+	ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+	<h1 class="display-4">My Recipe Book</h1>
+</div>
+<div id="RecipeListDisplay"></div>
+<div class="text-center">
+	<button onclick="CreateRecipe()" class="btn btn-primary btn-spacer">Create New Recipe</button>
+</div>
+
+<script>
+	var searchText = "";
+	var page = 1;
+	var sortAscending = true;
+
+	function CreateRecipe() {
+		$.ajax({
+			url: "/Home/CreateRecipe",
+			type: 'GET',
+			success: function (data) {
+				if (data) {  // check if data is defined
+					window.location = "/Home/Recipe/" + data;
+				}
+			},
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				alert("Error: " + errorThrown);
+			}
+		});
+	}
+	function SearchText() {
+		var tmp = $("#txtSearchText").val();
+		if(typeof tmp != 'undefined')
+			searchText = encodeURIComponent(tmp);
+		if (searchText == "")
+			searchText = "%20";
+		page = 1;
+		SearchRecipes();
+	}
+
+	function SearchPage(pageNum) {
+		page = pageNum;
+		SearchRecipes();
+	}
+
+	function SearchOrder() {
+		sortAscending = !sortAscending;
+		SearchRecipes();
+	}
+	function SearchRecipes() {
+		$.ajax({
+			url: "/Home/Search/"+searchText+"/"+page+"/"+sortAscending,
+			type: 'GET',
+			success: function (data) {
+				if (data) {  // check if data is defined
+					$("#RecipeListDisplay").html(data);
+					var thisPageBtn = $("#btnPage_" + $("#pageNumber").val());
+					thisPageBtn.removeClass("btn-secondary");
+					thisPageBtn.addClass("btn-primary");
+				}
+			},
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				alert("Error: " + errorThrown);
+			}
+		});
+	}
+
+	$(document).ready(function () {
+		SearchText();
+	});
+</script>

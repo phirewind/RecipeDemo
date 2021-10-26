@@ -1,0 +1,56 @@
+﻿@model RecipeDemo.ViewModels.RecipeListViewModel
+<div class="d-flex justify-content-sm-center">
+	Search recipes for:&nbsp;&nbsp;<input type="text" id="txtSearchText" value="@Model.SearchText" /> <button type="button" class="btn-sm btn-primary" onclick="SearchText()">Search</button>
+	<button type="button" id="btnSortAscending" onclick="SearchOrder()" class="btn-sm btn-primary"><i class="@(@Model.SortAscending ? "bi-caret-up-fill" : "bi-caret-down-fill")"></i></button>
+	<input type="hidden" id="sortAscending" value="@Model.SortAscending" />
+	<input type="hidden" id="pageNumber" value="@Model.PageNumber" />
+</div>
+@if (Model.Recipes.Count > 0)
+{
+<div class="d-flex">
+	<div class="col-md-2"></div>
+	<div class="col-md-4">
+		<ul>
+			@foreach (Recipe recipe in Model.Recipes)
+			{
+				<li>
+					<a href="Home/Recipe/@recipe.Id" id="lblRecipe_@recipe.Id" onmouseover="Highlight(@recipe.Id)">@recipe.Title</a>
+					<input type="hidden" id="img_@recipe.Id" value="@recipe.Image" />
+				</li>
+			}
+		</ul>
+	</div>
+	<div class="col-md-4 text-center">
+			<h4 id="lblRecipe" class="mb-1">@Model.Recipes[0].Title</h4>
+			<img id="imgRecipe" class="thumbnail" src="~/images/@Model.Recipes[0].Image"/>
+	</div>
+	<div class="col-md-2"></div>
+</div>
+<div class="d-flex justify-content-sm-center">
+	@foreach (int pagen in Model.Pages)
+	{
+		<button id="btnPage_@pagen" onclick="SearchPage(@pagen)" class="btn btn-secondary btn-spacer">@pagen</button>
+	}
+</div>
+}
+else
+{
+<div>No Results Found</div>
+}
+
+<script>
+	$('#txtSearchText').keydown(function (e) {
+		var key = e.which;
+		if (key == 13)  // the enter key code
+		{
+			e.preventDefault();
+			SearchText();
+			return false;
+		}
+	});
+
+	function Highlight(id) {
+		$("#lblRecipe").text($("#lblRecipe_" + id).text());
+		$("#imgRecipe").attr("src", "images/" + $("#img_" + id).val());
+	}
+</script>
